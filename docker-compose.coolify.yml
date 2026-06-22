@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Sistema Elephant — Docker Compose para COOLIFY
+#
+# No Coolify:
+#   1. Crie um recurso do tipo "Docker Compose" e conecte este repositório Git.
+#   2. Cole este arquivo (ou aponte para docker-compose.coolify.yml).
+#   3. Em "Environment Variables", defina:  OPENAI_API_KEY  (obrigatório)
+#   4. O Coolify gera sozinho: senha do Postgres, AUTH_SECRET e o domínio (FQDN).
+#
+# Magic variables do Coolify usadas aqui:
+#   SERVICE_USER_POSTGRES / SERVICE_PASSWORD_POSTGRES -> credenciais geradas
+#   SERVICE_BASE64_AUTHSECRET                          -> AUTH_SECRET gerado
+#   SERVICE_FQDN_APP_3000                              -> domínio + proxy p/ porta 3000
+# ─────────────────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: elephant
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SERVICE_USER_POSTGRES} -d elephant"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Aplica migrations + cria o usuário admin (roda uma vez e encerra).
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed"
+    environment:
+      DATABASE_URL: "postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/elephant?schema=public"
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@elephant.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-elephant123}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Admin elephant.}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    environment:
+      # Domínio gerenciado pelo Coolify (proxy + HTTPS automático para a porta 3000)
+      SERVICE_FQDN_APP_3000: ""
+      DATABASE_URL: "postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/elephant?schema=public"
+      AUTH_SECRET: ${SERVICE_BASE64_AUTHSECRET}
+      AUTH_TRUST_HOST: "true"
+      APP_URL: ${SERVICE_FQDN_APP_3000}
+      STORAGE_DIR: /app/storage
+      # Defina este valor na UI do Coolify (Environment Variables):
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  pgdata:
+  storage:

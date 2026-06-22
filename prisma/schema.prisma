@@ -1,0 +1,89 @@
+// Sistema Elephant — schema do banco de dados
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EQUIPE
+}
+
+enum Format {
+  INSTAGRAM_FEED
+  INSTAGRAM_STORY
+  FACEBOOK_FEED
+}
+
+enum GenStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         Role         @default(EQUIPE)
+  createdAt    DateTime     @default(now())
+  generations  Generation[]
+}
+
+model Client {
+  id               String       @id @default(cuid())
+  name             String
+  slug             String       @unique
+  logoUrl          String?
+  brandColors      Json? // ["#000000", "#ffffff", ...]
+  fonts            Json? // [{ name, url }]
+  styleDescription String?      @db.Text
+  visualRules      String?      @db.Text
+  restrictions     String?      @db.Text
+  basePrompt       String?      @db.Text
+  referenceImages  Json? // [url, ...]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  generations      Generation[]
+
+  @@index([slug])
+}
+
+model Generation {
+  id                String    @id @default(cuid())
+  clientId          String
+  userId            String
+  format            Format
+  briefing          String    @db.Text
+  mainText          String?
+  secondaryText     String?
+  cta               String?
+  observations      String?   @db.Text
+  referenceImageUrl String?
+  finalPrompt       String    @db.Text
+  model             String    @default("gpt-image-1")
+  sizeUsed          String
+  rawImageUrl       String?
+  composedImageUrl  String?
+  layers            Json? // camadas editáveis (texto/logo: pos, fonte, cor, etc.)
+  status            GenStatus @default(PENDING)
+  error             String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([clientId])
+  @@index([userId])
+  @@index([format])
+  @@index([createdAt])
+}

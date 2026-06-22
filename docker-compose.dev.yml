@@ -1,0 +1,18 @@
+# Postgres local para desenvolvimento
+# Uso: docker compose -f docker-compose.dev.yml up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: elephant-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: elephant
+      POSTGRES_PASSWORD: elephant
+      POSTGRES_DB: elephant
+    ports:
+      - "5432:5432"
+    volumes:
+      - elephant_pgdata:/var/lib/postgresql/data
+
+volumes:
+  elephant_pgdata:

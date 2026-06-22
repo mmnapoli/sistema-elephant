@@ -1,0 +1,10 @@
+# Normaliza finais de linha para LF no repositório (build Linux/Docker)
+* text=auto eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary

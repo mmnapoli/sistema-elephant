@@ -1,0 +1,75 @@
+# Produção — Sistema Elephant
+# Configure as variáveis em um arquivo .env (ver .env.example) antes de subir.
+# Uso: docker compose up -d --build
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-elephant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elephant}
+      POSTGRES_DB: ${POSTGRES_DB:-elephant}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-elephant}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Roda migrations + seed uma vez e encerra.
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://elephant:elephant@postgres:5432/elephant?schema=public}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@elephant.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-elephant123}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Admin elephant.}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://elephant:elephant@postgres:5432/elephant?schema=public}
+      AUTH_SECRET: ${AUTH_SECRET:?defina AUTH_SECRET no .env}
+      AUTH_TRUST_HOST: "true"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?defina OPENAI_API_KEY no .env}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      STORAGE_DIR: /app/storage
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  storage:
+  caddy_data:
+  caddy_config:
