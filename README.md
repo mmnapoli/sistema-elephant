@@ -54,27 +54,26 @@ npm run dev            # http://localhost:3000
 | `npm run db:seed` | Cria o usuário admin |
 | `npm run db:studio` | Prisma Studio (inspecionar o banco) |
 
-## Deploy na VPS (Docker + Caddy)
+## Deploy no Coolify (Nixpacks + Postgres separado)
 
-1. Aponte o domínio (registro A) para o IP da VPS.
-2. Crie o `.env` na VPS a partir do `.env.example` e preencha:
-   `AUTH_SECRET`, `OPENAI_API_KEY`, `POSTGRES_PASSWORD`, `APP_DOMAIN` (seu domínio),
-   `APP_URL` (`https://seu-dominio`).
-3. Suba tudo:
+Passo a passo completo em **[COOLIFY.md](COOLIFY.md)**. Resumo:
 
-```bash
-docker compose up -d --build
-```
+1. **Database** → novo PostgreSQL no Coolify (anote a *Internal Connection String*).
+2. **Application** → conecte este repositório GitHub, Build Pack **Nixpacks** (auto-deploy na `main`).
+3. **Environment Variables** do app:
+   - `DATABASE_URL` = connection string interna do Postgres do Coolify
+   - `AUTH_SECRET` = `npx auth secret`
+   - `OPENAI_API_KEY` = sua chave
+   - `AUTH_TRUST_HOST=true`, `STORAGE_DIR=/app/storage`
+4. **Persistent Storage** → monte um volume em `/app/storage` (preserva as imagens entre deploys).
+5. **Deploy.** O [nixpacks.toml](nixpacks.toml) roda `prisma migrate deploy` + seed e sobe o app.
 
-O serviço `migrate` aplica as migrations e cria o admin automaticamente; o `caddy`
-provisiona HTTPS via Let's Encrypt para o `APP_DOMAIN`.
-
-> Já tem um Postgres próprio na VPS? Basta apontar `DATABASE_URL` para ele e remover o
-> serviço `postgres` do `docker-compose.yml` (mantendo `migrate` e `app`).
+> O `migrate deploy` aplica as migrations versionadas em `prisma/migrations/` e o seed cria o
+> admin inicial (`admin@elephant.local` / `elephant123`) de forma idempotente.
 
 ### Backups
-- Banco: `docker compose exec postgres pg_dump -U elephant elephant > backup.sql`
-- Imagens: volume `storage` (faça backup periódico).
+- Banco: use o backup automático do recurso PostgreSQL no Coolify.
+- Imagens: faça backup do volume persistente montado em `/app/storage`.
 
 ## Estrutura
 

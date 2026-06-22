@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Saída otimizada para Docker (server mínimo na VPS).
-  output: "standalone",
+  /* Deploy via Nixpacks (Coolify): usa `next build` + `next start` padrão. */
 };
 
 export default nextConfig;
