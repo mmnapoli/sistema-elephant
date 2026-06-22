@@ -1,7 +1,0 @@
-# Nixpacks (Coolify) — build e start do Sistema Elephant
-#
-# - O build roda automaticamente: npm ci -> postinstall (prisma generate) -> next build
-# - No start: aplica migrations, garante o admin (seed idempotente) e sobe o Next.
-
-[start]
-cmd = "npx prisma migrate deploy && (npx prisma db seed || true) && npm run start"
