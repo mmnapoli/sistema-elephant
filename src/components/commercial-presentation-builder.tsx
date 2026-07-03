@@ -30,6 +30,11 @@ const ASSETS = {
   entrance: "/presentation-assets/star-mall/entrance-signage.jpg",
 };
 
+const BRAND_ASSETS = {
+  wordmark: "/brand-assets/elephant-wordmark.png",
+  symbol: "/brand-assets/elephant-symbol.png",
+};
+
 const PAGES = [
   { id: "cover", label: "Capa" },
   { id: "context", label: "Contexto" },
@@ -600,7 +605,9 @@ function NextPage({ index, total, clientName, contactName, investmentNote }: Sha
           </div>
           <div className="rounded-md bg-[#f4b95f] p-5 text-[#241c2f]">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em]">Marca</p>
-            <p className="mt-3 text-[28px] font-semibold">elephant.</p>
+            <div className="mt-4 h-16 w-full">
+              <ElephantBrand className="h-16 w-full" />
+            </div>
           </div>
         </div>
       </div>
@@ -644,25 +651,55 @@ function PageHeader({
   );
 }
 
-function ElephantBrand({ inverted = false, compact = false }: { inverted?: boolean; compact?: boolean }) {
-  return (
-    <div className={cn("flex items-center gap-2", inverted ? "text-white" : "text-[#241c2f]")}>
-      <span
-        className={cn(
-          "grid place-items-center rounded-md border text-sm font-bold",
-          compact ? "h-7 w-7" : "h-9 w-9",
-          inverted ? "border-white/25 bg-white/10" : "border-[#241c2f]/20 bg-white",
-        )}
-      >
-        e
-      </span>
-      {!compact ? (
-        <span className="text-[21px] font-bold tracking-tight">
-          elephant<span className="text-[#f4b95f]">.</span>
+function ElephantBrand({
+  inverted = false,
+  compact = false,
+  className,
+}: {
+  inverted?: boolean;
+  compact?: boolean;
+  className?: string;
+}) {
+  if (compact) {
+    return (
+      <div className={cn("flex items-center gap-2", inverted ? "text-white/70" : "text-[#241c2f]")}>
+        <span
+          className={cn(
+            "relative block h-7 w-9 overflow-hidden rounded-sm",
+            inverted ? "bg-[#eef56d]" : "bg-[#eef56d]",
+          )}
+        >
+          <Image
+            src={BRAND_ASSETS.symbol}
+            alt="Simbolo Elephant"
+            fill
+            sizes="36px"
+            className="object-contain"
+          />
         </span>
-      ) : (
-        <span>elephant.</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em]">elephant.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative h-16 w-64 overflow-hidden rounded-md",
+        inverted ? "bg-white/95 p-2" : "bg-transparent",
+        className,
       )}
+    >
+      <Image
+        src={BRAND_ASSETS.wordmark}
+        alt="Logo Elephant"
+        fill
+        sizes="240px"
+        className={cn(
+          "object-contain",
+          inverted ? "p-1" : "",
+        )}
+      />
     </div>
   );
 }

@@ -9,5 +9,5 @@ export default auth;
 export const config = {
   // Protege tudo, exceto rotas de API (guardadas individualmente),
   // assets do Next e arquivos estáticos.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|presentation-assets).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|presentation-assets|brand-assets).*)"],
 };
