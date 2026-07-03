@@ -8,12 +8,14 @@ import {
   Sparkles,
   History,
   LogOut,
+  Presentation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/generate", label: "Gerar arte", icon: Sparkles },
+  { href: "/presentations", label: "Apresentações", icon: Presentation },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/history", label: "Histórico", icon: History },
 ];

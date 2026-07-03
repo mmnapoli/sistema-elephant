@@ -34,3 +34,77 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
 }
+
+.commercial-slide {
+  aspect-ratio: 16 / 9;
+  background: #f8faf7;
+  color-adjust: exact;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.commercial-slide.slide-white {
+  background: #ffffff;
+}
+
+.commercial-slide.slide-dark {
+  background: #111711;
+}
+
+.commercial-slide.slide-deep {
+  background: #16231c;
+}
+
+@media print {
+  @page {
+    size: 13.333in 7.5in;
+    margin: 0;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #ffffff !important;
+  }
+
+  aside,
+  .presentation-editor,
+  .presentation-toolbar,
+  .presentation-screen-title {
+    display: none !important;
+  }
+
+  main {
+    display: block !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  main > div {
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .presentation-shell,
+  .presentation-print-root,
+  .deck-preview {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  .commercial-slide {
+    width: 100vw !important;
+    height: 100vh !important;
+    aspect-ratio: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .commercial-slide:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
